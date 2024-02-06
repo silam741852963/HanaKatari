@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useState, Dispatch, SetStateAction } from "react";
-import { auth, provider } from "../firebase/config";
+import { auth, provider, db } from "../firebase/config";
 import {
   signInWithPopup,
   GoogleAuthProvider,
@@ -14,6 +14,8 @@ import {
 } from "firebase/auth";
 import { setCookie } from "cookies-next";
 import toast from "react-hot-toast";
+import addGoogleUser from "../user/addGoogleUser";
+import addNativeUser from "../user/addNativeUser";
 
 type Props = {
   children: React.ReactNode;
@@ -48,12 +50,13 @@ export default function AuthContextProvider({ children }: Props) {
     setCookie("email", user.email);
     setCookie("username", user.username);
     setCookie("profileImage", user.profileImage);
+    setCookie("uid", user.uid);
     setAuthContext(user);
   };
 
-  const SignInWithGooglePopup = () => {
+  const SignInWithGooglePopup = async () => {
     signInWithPopup(auth, provider)
-      .then((result) => {
+      .then(async (result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
         const credential = GoogleAuthProvider.credentialFromResult(
           result
@@ -67,8 +70,10 @@ export default function AuthContextProvider({ children }: Props) {
           email: user.email as string,
           username: user.displayName,
           profileImage: user.photoURL,
+          uid: user.uid,
         };
         SetAuthContextAndCookie(UserInfo);
+        await addGoogleUser();
         Welcome(user.displayName);
       })
       .catch((error) => {
@@ -83,10 +88,10 @@ export default function AuthContextProvider({ children }: Props) {
       });
   };
 
-  const SignInwithGoogleRedirect = () => {
+  const SignInwithGoogleRedirect = async () => {
     signInWithRedirect(auth, provider);
     getRedirectResult(auth)
-      .then((result) => {
+      .then(async (result) => {
         if (result) {
           // This gives you a Google Access Token. You can use it to access Google APIs.
           const credential = GoogleAuthProvider.credentialFromResult(
@@ -102,8 +107,10 @@ export default function AuthContextProvider({ children }: Props) {
             email: user.email as string,
             username: user.displayName,
             profileImage: user.photoURL,
+            uid: user.uid,
           };
           SetAuthContextAndCookie(UserInfo);
+          await addGoogleUser();
           Welcome(user.displayName);
         }
       })
@@ -129,11 +136,11 @@ export default function AuthContextProvider({ children }: Props) {
       });
   };
 
-  const SignUpWithEmailAndPassword = (formData: FormData) => {
+  const SignUpWithEmailAndPassword = async (formData: FormData) => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         // Signed up
         const user = userCredential.user;
         // ...
@@ -141,8 +148,10 @@ export default function AuthContextProvider({ children }: Props) {
           email: user.email as string,
           username: user.displayName,
           profileImage: user.photoURL,
+          uid: user.uid,
         };
         SetAuthContextAndCookie(UserInfo);
+        await addNativeUser(formData);
         Welcome(user.displayName, "はじめまして、お花人さん");
       })
       .catch((error) => {
@@ -164,6 +173,7 @@ export default function AuthContextProvider({ children }: Props) {
           email: user.email as string,
           username: user.displayName,
           profileImage: user.photoURL,
+          uid: user.uid,
         };
         SetAuthContextAndCookie(UserInfo);
         Welcome(user.displayName);
