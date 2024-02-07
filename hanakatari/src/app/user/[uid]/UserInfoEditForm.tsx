@@ -1,6 +1,6 @@
 "use client";
 import changeUsername from "@/lib/user/changeUsername";
-import changeProfileImage from "@/lib/user/changeProfileImage";
+import ChangeProfileImage from "@/lib/user/ChangeProfileImage";
 
 export default function UserInfoEditForm() {
   return (
@@ -9,10 +9,7 @@ export default function UserInfoEditForm() {
         <input type="text" name="username" placeholder="username" />
         <button className="text-white">Change</button>
       </form>
-      <form action={changeProfileImage}>
-        <input type="text" name="profileImage" placeholder="profileImage" />
-        <button>Change</button>
-      </form>
+      <ChangeProfileImage />
     </>
   );
 }
